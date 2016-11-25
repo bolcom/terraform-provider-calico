@@ -1,0 +1,13 @@
+- apiVersion: v1
+  kind: hostEndpoint
+  metadata:
+    labels:
+      endpointlabel: myvalue
+    name: myendpoint
+    node: my-endpoint-001
+  spec:
+    expectedIPs:
+    - 127.0.0.1
+    interfaceName: eth0
+    profiles:
+    - endpointprofile

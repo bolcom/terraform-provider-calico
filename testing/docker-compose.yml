@@ -1,0 +1,5 @@
+---
+etcd:
+  image: elcolio/etcd:2.0.10
+  expose:
+    - 2379

@@ -26,6 +26,15 @@ provider "calico" {
   backend_etcd_authority = "192.168.56.20:2379"
 }
 ```
+Optional:
+- backend_etcd_scheme: default: http
+- backend_etcd_endpoints: multiple etcd endpoints separated by comma
+- backend_etcd_username
+- backend_etcd_password
+- backend_etcd_keyfile: File location keyfile
+- backend_etcd_certfile: File location certfile
+- backend_etcd_cacertfile: File location cacert
+
 ### Host Endpoint
 ```
 resource "calico_hostendpoint" "myendpoint" {

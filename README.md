@@ -10,8 +10,9 @@ Due to the large amount of dependencies from libcalico-go and it's usage of glid
 ```
 mkdir -p $GOPATH/src/github.com/bolcom
 git clone https://github.com/bolcom/terraform-provider-calico.git $GOPATH/src/github.com/bolcom/terraform-provider-calico
-cd GOPATH/src/github.com/bolcom/terraform-provider-calico
-glide install  # github.com/Masterminds/glide
+cd $GOPATH/src/github.com/bolcom/terraform-provider-calico
+go get github.com/Masterminds/glide
+glide install
 go build
 ```
 

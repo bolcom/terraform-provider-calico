@@ -6,10 +6,13 @@
 
 ## Install
 Due to the large amount of dependencies from libcalico-go and it's usage of glide for dep management, the install is a bit more than just a go get.
+
 ```
-$ go get github.com/bolcom/terraform-provider-calico
-$ glide install # github.com/Masterminds/glide
-$ go build
+mkdir -p $GOPATH/src/github.com/bolcom
+git clone https://github.com/bolcom/terraform-provider-calico.git $GOPATH/src/github.com/bolcom/terraform-provider-calico
+cd GOPATH/src/github.com/bolcom/terraform-provider-calico
+glide install  # github.com/Masterminds/glide
+go build
 ```
 
 ## Usage

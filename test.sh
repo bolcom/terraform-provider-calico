@@ -3,7 +3,11 @@
 WD=$(pwd)
 WORKDIR=tmp
 TFVERSION=0.7.11
-TFARCH=linux_amd64
+if [[ $OSTYPE =~ darwin ]]; then
+  TFARCH=darwin_amd64
+else
+  TFARCH=linux_amd64
+fi
 TFURL="https://releases.hashicorp.com/terraform/${TFVERSION}/terraform_${TFVERSION}_${TFARCH}.zip"
 CALICOVERSION=v1.0.0-beta
 CALICOURL="https://github.com/projectcalico/calico-containers/releases/download/${CALICOVERSION}/calicoctl"
@@ -14,23 +18,32 @@ fi
 cd $WORKDIR
 
 if ! [[ -e terraform ]]; then
-  echo "Downloading Terraform"
+  echo "downloading terraform"
   curl -s $TFURL -o terraform_${TFVERSION}_${TFARCH}.zip
   if [[ $? -ne 0 ]]; then
-    echo "Failed to download terraform"
+    echo "failed to download terraform"
     exit 1
   fi
   unzip terraform_${TFVERSION}_${TFARCH}.zip
 fi
 
-if ! [[ -e calicoctl ]]; then
-  echo "Downloading Calicoctl"
-  curl -s -L $CALICOURL -o calicoctl
+if [[ $OSTYPE =~ darwin ]]; then
+  CALICOBIN="${GOPATH}/bin/calicoctl"
+else
+  CALICOBIN=./calicoctl
+fi
+if ! [[ -e $CALICOBIN ]]; then
+  echo "downloading calicoctl"
+  if [[ $OSTYPE =~ darwin ]]; then
+    go get -v github.com/bolcom/calico-containers/calicoctl
+  else
+    curl -s -l $CALICOURL -o calicoctl
+    chmod +x calicoctl
+  fi
   if [[ $? -ne 0 ]]; then
     echo "Failed to download calicoctl"
     exit 1
   fi
-  chmod +x calicoctl
 fi
 
 cd "$WD"
@@ -71,13 +84,24 @@ docker-compose kill &>/dev/null
 docker-compose rm &>/dev/null
 
 echo "Setting up Etcd"
-docker-compose run -d etcd >/dev/null
-ETCD_AUTHORITY="$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker-compose ps -q)):2379"
+docker-compose run -p 2379:2379 -d etcd >/dev/null
+
+if [[ $OSTYPE =~ darwin ]]; then
+  if [ -z "$DOCKER_HOST" ]; then
+    echo "Missing DOCKER_HOST environment key"
+    exit 1
+  fi
+  hostport=${DOCKER_HOST##*//}
+  ETCD_AUTHORITY="${hostport%%:*}:2379"
+else
+  ETCD_AUTHORITY="$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker-compose ps -q)):2379"
+fi
 
 if [[ "$ETCD_AUTHORITY" == "" ]]; then
   echo "Failed to get Etcd endpoint"
   exit 1
 fi
+echo "(ETCD_AUTHORITY=$ETCD_AUTHORITY)"
 
 sleep 5s
 
@@ -86,7 +110,7 @@ sed "s/PLACEHOLDER/${ETCD_AUTHORITY}/" provider.tf > test/provider.tf
 
 cp terraform test/
 cp terraform-provider-calico test/
-cp calicoctl test/
+cp "$CALICOBIN" test/
 
 echo
 echo "Testing:"

@@ -1,5 +1,5 @@
 ---
 etcd:
   image: elcolio/etcd:2.0.10
-  expose:
-    - 2379
+  ports:
+    - 2379:2379

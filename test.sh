@@ -25,7 +25,13 @@ if ! [[ -e terraform ]]; then
   unzip terraform_${TFVERSION}_${TFARCH}.zip
 fi
 
-CALICOBIN="${GOPATH}/bin/calicoctl"
+# check terraform version
+VCHECK="$(./terraform version | head -n1 | awk '{print $2}')"
+if [[ $VCHECK != "v${TFVERSION}" ]]; then
+  echo "Terraform version (${VCHECK}) doesn't match ${TFVERSION}"
+  exit 1
+fi
+
 if ! [[ -e $CALICOBIN ]]; then
   echo "downloading calicoctl"
   go get -v github.com/bolcom/calico-containers/calicoctl
@@ -35,6 +41,12 @@ if ! [[ -e $CALICOBIN ]]; then
   fi
 fi
 
+# check calicoctl
+CALICOBIN="${GOPATH}/bin/calicoctl"
+if ! $CALICOBIN version; then
+  echo "Built calicoctl doesn't work as expected"
+  exit 1
+fi
 cd "$WD"
 
 if [[ "$DEBUG" != "true" ]]; then

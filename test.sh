@@ -9,8 +9,6 @@ else
   TFARCH=linux_amd64
 fi
 TFURL="https://releases.hashicorp.com/terraform/${TFVERSION}/terraform_${TFVERSION}_${TFARCH}.zip"
-CALICOVERSION=v1.0.0-beta
-CALICOURL="https://github.com/projectcalico/calico-containers/releases/download/${CALICOVERSION}/calicoctl"
 
 if ! [[ -d $WORKDIR ]]; then
   mkdir $WORKDIR
@@ -27,19 +25,10 @@ if ! [[ -e terraform ]]; then
   unzip terraform_${TFVERSION}_${TFARCH}.zip
 fi
 
-if [[ $OSTYPE =~ darwin ]]; then
-  CALICOBIN="${GOPATH}/bin/calicoctl"
-else
-  CALICOBIN=./calicoctl
-fi
+CALICOBIN="${GOPATH}/bin/calicoctl"
 if ! [[ -e $CALICOBIN ]]; then
   echo "downloading calicoctl"
-  if [[ $OSTYPE =~ darwin ]]; then
-    go get -v github.com/bolcom/calico-containers/calicoctl
-  else
-    curl -s -l $CALICOURL -o calicoctl
-    chmod +x calicoctl
-  fi
+  go get -v github.com/bolcom/calico-containers/calicoctl
   if [[ $? -ne 0 ]]; then
     echo "Failed to download calicoctl"
     exit 1

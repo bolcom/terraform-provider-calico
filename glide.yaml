@@ -1,12 +1,12 @@
 package: github.com/bolcom/terraform-provider-calico
 import:
 - package: github.com/hashicorp/terraform
-  version: v0.7.9
+  version: v0.7.11
   subpackages:
   - plugin
   - terraform
 - package: github.com/hashicorp/terraform/helper/schema
-  version: v0.7.9
+  version: v0.7.11
 - package: github.com/projectcalico/libcalico-go
   version: ef0ff501cca9fe87dd1580f1f7442884a551dc4b
   subpackages:

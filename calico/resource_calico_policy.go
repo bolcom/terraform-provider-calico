@@ -9,22 +9,17 @@ import (
 	"github.com/projectcalico/libcalico-go/lib/errors"
 )
 
-func resourceCalicoProfile() *schema.Resource {
+func resourceCalicoPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCalicoProfileCreate,
-		Read:   resourceCalicoProfileRead,
-		Update: resourceCalicoProfileUpdate,
-		Delete: resourceCalicoProfileDelete,
+		Create: resourceCalicoPolicyCreate,
+		Read:   resourceCalicoPolicyRead,
+		Update: resourceCalicoPolicyUpdate,
+		Delete: resourceCalicoPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"labels": &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: false,
 			},
 			"spec": &schema.Schema{
 				Type:     schema.TypeList,
@@ -32,6 +27,14 @@ func resourceCalicoProfile() *schema.Resource {
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"order": &schema.Schema{
+							Type:     schema.TypeFloat,
+							Optional: true,
+						},
+						"selector": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"ingress": &schema.Schema{
 							Type:     schema.TypeList,
 							Optional: true,
@@ -313,18 +316,18 @@ func resourceCalicoProfile() *schema.Resource {
 	}
 }
 
-func resourceCalicoProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCalicoPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(config)
 	calicoClient := config.Client
 
-	metadata := dToProfileMetadata(d)
-	spec, err := dToProfileSpec(d)
+	metadata := dToPolicyMetadata(d)
+	spec, err := dToPolicySpec(d)
 	if err != nil {
 		return err
 	}
 
-	profiles := calicoClient.Profiles()
-	if _, err = profiles.Create(&api.Profile{
+	policies := calicoClient.Policies()
+	if _, err = policies.Create(&api.Policy{
 		Metadata: metadata,
 		Spec:     spec,
 	}); err != nil {
@@ -332,15 +335,15 @@ func resourceCalicoProfileCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.SetId(metadata.Name)
-	return resourceCalicoProfileRead(d, meta)
+	return resourceCalicoPolicyRead(d, meta)
 }
 
-func resourceCalicoProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCalicoPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(config)
 	calicoClient := config.Client
 
-	profiles := calicoClient.Profiles()
-	profile, err := profiles.Get(api.ProfileMetadata{
+	policies := calicoClient.Policies()
+	policy, err := policies.Get(api.PolicyMetadata{
 		Name: d.Get("name").(string),
 	})
 
@@ -354,34 +357,33 @@ func resourceCalicoProfileRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.Set("name", profile.Metadata.Name)
-	d.Set("labels", profile.Metadata.Labels)
+	d.Set("name", policy.Metadata.Name)
 
-	setSchemaFieldsForProfileSpec(profile, d)
+	setSchemaFieldsForPolicySpec(policy, d)
 
 	return nil
 }
 
-func resourceCalicoProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCalicoPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(config)
 	calicoClient := config.Client
 
-	profiles := calicoClient.Profiles()
+	policies := calicoClient.Policies()
 
-	metadata := dToProfileMetadata(d)
-	if _, err := profiles.Get(metadata); err != nil {
+	metadata := dToPolicyMetadata(d)
+	if _, err := policies.Get(metadata); err != nil {
 		if _, ok := err.(errors.ErrorResourceDoesNotExist); ok {
 			d.SetId("")
 			return nil
 		}
 	}
 
-	spec, err := dToProfileSpec(d)
+	spec, err := dToPolicySpec(d)
 	if err != nil {
 		return err
 	}
 
-	if _, err = profiles.Apply(&api.Profile{
+	if _, err = policies.Apply(&api.Policy{
 		Metadata: metadata,
 		Spec:     spec,
 	}); err != nil {
@@ -391,12 +393,12 @@ func resourceCalicoProfileUpdate(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceCalicoProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCalicoPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(config)
 	calicoClient := config.Client
 
-	profiles := calicoClient.Profiles()
-	err := profiles.Delete(api.ProfileMetadata{
+	policies := calicoClient.Policies()
+	err := policies.Delete(api.PolicyMetadata{
 		Name: d.Get("name").(string),
 	})
 
@@ -409,21 +411,25 @@ func resourceCalicoProfileDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-// set Schema Fields based on existing Profile Specs
-func setSchemaFieldsForProfileSpec(profile *api.Profile, d *schema.ResourceData) {
+// set Schema Fields based on existing Policy Specs
+func setSchemaFieldsForPolicySpec(policy *api.Policy, d *schema.ResourceData) {
 	specArray := make([]interface{}, 1)
 
 	specMap := make(map[string]interface{})
+
+	specMap["order"] = policy.Spec.Order
+	specMap["selector"] = policy.Spec.Selector
+
 	ingressRuleMapArray := make([]interface{}, 1)
-	if profile.Spec.IngressRules != nil && len(profile.Spec.IngressRules) > 0 {
-		resourceRules := rulesToMap(profile.Spec.IngressRules)
+	if policy.Spec.IngressRules != nil && len(policy.Spec.IngressRules) > 0 {
+		resourceRules := rulesToMap(policy.Spec.IngressRules)
 		ruleMap := make(map[string]interface{})
 		ruleMap["rule"] = resourceRules
 		ingressRuleMapArray[0] = ruleMap
 	}
 	egressRuleMapArray := make([]interface{}, 1)
-	if profile.Spec.EgressRules != nil && len(profile.Spec.EgressRules) > 0 {
-		resourceRules := rulesToMap(profile.Spec.EgressRules)
+	if policy.Spec.EgressRules != nil && len(policy.Spec.EgressRules) > 0 {
+		resourceRules := rulesToMap(policy.Spec.EgressRules)
 		ruleMap := make(map[string]interface{})
 		ruleMap["rule"] = resourceRules
 		egressRuleMapArray[0] = ruleMap
@@ -436,28 +442,24 @@ func setSchemaFieldsForProfileSpec(profile *api.Profile, d *schema.ResourceData)
 	d.Set("spec", specArray)
 }
 
-// set Metadata based on existing Profile Metadata
-func dToProfileMetadata(d *schema.ResourceData) api.ProfileMetadata {
-	metadata := api.ProfileMetadata{
+// set Metadata based on existing Policy Metadata
+func dToPolicyMetadata(d *schema.ResourceData) api.PolicyMetadata {
+	metadata := api.PolicyMetadata{
 		Name: d.Get("name").(string),
-	}
-
-	if v, ok := d.GetOk("labels"); ok {
-		labelMap := v.(map[string]interface{})
-		labels := make(map[string]string, len(labelMap))
-
-		for k, v := range labelMap {
-			labels[k] = v.(string)
-		}
-		metadata.Labels = labels
 	}
 
 	return metadata
 }
 
-// create Profile based on provided resource data
-func dToProfileSpec(d *schema.ResourceData) (api.ProfileSpec, error) {
-	spec := api.ProfileSpec{}
+// create Policy based on provided resource data
+func dToPolicySpec(d *schema.ResourceData) (api.PolicySpec, error) {
+	spec := api.PolicySpec{}
+
+	order := d.Get("spec.0.order").(float64)
+
+	spec.Order = &order
+
+	spec.Selector = d.Get("spec.0.selector").(string)
 
 	if v, ok := d.GetOk("spec.0.ingress.0.rule.#"); ok {
 		ingressRules := make([]api.Rule, v.(int))

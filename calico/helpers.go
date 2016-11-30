@@ -123,11 +123,13 @@ func srcDstListToEntityRule(srcDstList []interface{}) (api.EntityRule, error) {
 	resourceRuleMap := srcDstList[0].(map[string]interface{})
 
 	if v, ok := resourceRuleMap["net"]; ok {
-		_, n, err := caliconet.ParseCIDR(v.(string))
-		if err != nil {
-			return entityRule, err
+		if len(v.(string)) > 0 {
+			_, n, err := caliconet.ParseCIDR(v.(string))
+			if err != nil {
+				return entityRule, err
+			}
+			entityRule.Net = n
 		}
-		entityRule.Net = n
 	}
 	if v, ok := resourceRuleMap["selector"]; ok {
 		entityRule.Selector = v.(string)

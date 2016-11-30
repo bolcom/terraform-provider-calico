@@ -346,10 +346,13 @@ func resourceCalicoProfileRead(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	})
 
+	// Deal with resource does not exist
 	if err != nil {
 		if _, ok := err.(errors.ErrorResourceDoesNotExist); ok {
 			d.SetId("")
 			return nil
+		} else {
+			return fmt.Errorf("ERROR: %v", err)
 		}
 	}
 

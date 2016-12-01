@@ -1,6 +1,9 @@
 package calico
 
 import (
+	"fmt"
+
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/projectcalico/libcalico-go/lib/api"
 	caliconet "github.com/projectcalico/libcalico-go/lib/net"
 	"github.com/projectcalico/libcalico-go/lib/numorstring"
@@ -253,4 +256,12 @@ func rulesToMap(calicoRules []api.Rule) []map[string]interface{} {
 
 	return resourceRules
 
+}
+
+func dToCIDR(d *schema.ResourceData, field string) (caliconet.IPNet, error) {
+	_, cidr, err := caliconet.ParseCIDR(d.Get(field).(string))
+	if err != nil {
+		return *cidr, fmt.Errorf("ERROR: couldn't parse CIDR: %v", err)
+	}
+	return *cidr, nil
 }

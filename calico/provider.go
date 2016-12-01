@@ -74,6 +74,7 @@ func Provider() terraform.ResourceProvider {
 			"calico_hostendpoint": resourceCalicoHostendpoint(),
 			"calico_profile":      resourceCalicoProfile(),
 			"calico_policy":       resourceCalicoPolicy(),
+			"calico_ippool":       resourceCalicoIpPool(),
 		},
 
 		ConfigureFunc: providerConfigure,

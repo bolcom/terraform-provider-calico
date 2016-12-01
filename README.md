@@ -2,7 +2,7 @@
 
 ## About
 - For use with Calico 2.x with the etcd backend
-- Only Hostendpoints, Profiles and Policies supported, more coming soon
+- Only IPPools, Hostendpoints, Profiles and Policies supported, more coming soon
 
 ## Install
 Due to the large amount of dependencies from libcalico-go and it's usage of glide for dep management, the install is a bit more than just a go get.
@@ -138,6 +138,19 @@ resource "calico_policy" "mypolicy" {
         }
       }
     }
+  }
+}
+```
+### IP Pools
+```
+resource "calico_ippool" "myippool" {
+  cidr = "10.1.0.0/16"
+  spec {
+    ipip {
+      enabled = "true"
+    }
+    nat-outgoing = "true"
+    disabled = "true"
   }
 }
 ```

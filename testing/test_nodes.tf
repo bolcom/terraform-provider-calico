@@ -1,0 +1,10 @@
+resource "calico_node" "mynode" {
+  name = "node-hostname"
+  spec {
+    bgp {
+      asNumber = "64512"
+      ipv4Address = "10.244.0.1"
+      ipv6Address = "2001:db8:85a3::8a2e:370:7334"
+    }
+  }
+}

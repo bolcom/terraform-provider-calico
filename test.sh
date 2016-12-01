@@ -43,7 +43,7 @@ fi
 
 # check calicoctl
 CALICOBIN="${GOPATH}/bin/calicoctl"
-if ! $CALICOBIN version; then
+if ! $CALICOBIN version &>/dev/null; then
   echo "Built calicoctl doesn't work as expected"
   exit 1
 fi
@@ -115,7 +115,7 @@ cp "$CALICOBIN" test/
 
 echo
 echo "Testing:"
-RESOURCES="${TESTS:-hostendpoints profiles workloadendpoints ippools bgppeers policies nodes}"
+RESOURCES="${TESTS:-nodes hostendpoints profiles workloadendpoints ippools bgppeers policies}"
 for i in $RESOURCES; do
   tffile="${WD}/testing/test_${i}.tf"
   if [[ -e $tffile ]]; then
@@ -128,6 +128,7 @@ for i in $RESOURCES; do
       RES="$(./terraform apply 2>&1 >/dev/null)"
     fi
     if [[ $? -ne 0 ]]; then
+      echo "${i} - FAILED"
       echo "$RES"
       echo "Failed to terraform apply (${tffile})"
       exit 1
@@ -140,10 +141,14 @@ for i in $RESOURCES; do
       ETCD_AUTHORITY="$ETCD_AUTHORITY" ./calicoctl get $i -o yaml 1> test.yaml 2>/dev/null
     fi
     if [[ $? -ne 0 ]]; then
+      echo "${i} - FAILED"
       echo "Failed to talk to Etcd at ${ETCD_AUTHORITY}"
       exit 1
     fi
-    if ! diff test.yaml "${WD}/testing/test_${i}.yaml"; then
+    RES="$(diff test.yaml ${WD}/testing/test_${i}.yaml)"
+    if [[ $? -ne 0 ]]; then
+      echo "${i} - FAILED"
+      echo "${RES}"
       echo "Expected ${i} yaml and that from testing/test_${i}.yaml do not match"
       echo "Full output from Etcd:"
       cat test.yaml

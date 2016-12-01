@@ -2,7 +2,6 @@
 
 ## About
 - For use with Calico 2.x with the etcd backend
-- BGPPeers, IPPools, Hostendpoints, Profiles and Policies supported, more coming soon
 
 ## Install
 Due to the large amount of dependencies from libcalico-go and it's usage of glide for dep management, the install is a bit more than just a go get.
@@ -162,6 +161,19 @@ resource "calico_bgppeer" "mybgppeer" {
   peerIP = "192.168.1.1"
   spec {
     asNumber = "63400"
+  }
+}
+```
+### Nodes
+```
+resource "calico_node" "mynode" {
+  name = "node-hostname"
+  spec {
+    bgp {
+      asNumber = "64512"
+      ipv4Address = "10.244.0.1"
+      ipv6Address = "2001:db8:85a3::8a2e:370:7334"
+    }
   }
 }
 ```

@@ -21,12 +21,11 @@ func resourceCalicoHostendpoint() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"labels": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: false,
 			},
 			"node": &schema.Schema{
 				Type:     schema.TypeString,

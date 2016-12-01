@@ -18,7 +18,7 @@ func resourceCalicoIpPool() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"cidr": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"spec": &schema.Schema{
 				Type:     schema.TypeList,

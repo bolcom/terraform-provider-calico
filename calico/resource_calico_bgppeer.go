@@ -22,15 +22,15 @@ func resourceCalicoBgpPeer() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"scope": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"node": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"peerIP": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"spec": &schema.Schema{
 				Type:     schema.TypeList,
@@ -40,7 +40,7 @@ func resourceCalicoBgpPeer() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"asNumber": &schema.Schema{
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 					},
 				},

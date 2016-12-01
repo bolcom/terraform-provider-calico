@@ -265,3 +265,110 @@ func dToCIDR(d *schema.ResourceData, field string) (caliconet.IPNet, error) {
 	}
 	return *cidr, nil
 }
+
+func entityRuleSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"net": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"notNet": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"selector": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"notSelector": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ports": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"notPorts": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+		},
+	}
+}
+
+func ruleSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"rule": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"action": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"protocol": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"notProtocol": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"icmp": &schema.Schema{
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": &schema.Schema{
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"code": &schema.Schema{
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+								},
+							},
+						},
+						"notICMP": &schema.Schema{
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": &schema.Schema{
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"code": &schema.Schema{
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+								},
+							},
+						},
+						"source": &schema.Schema{
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     entityRuleSchema(),
+						},
+						"destination": &schema.Schema{
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     entityRuleSchema(),
+						},
+					},
+				},
+			},
+		},
+	}
+}

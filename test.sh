@@ -115,7 +115,7 @@ cp "$CALICOBIN" test/
 
 echo
 echo "Testing:"
-RESOURCES="${TESTS:-hostendpoints profiles workloadendpoints ippools bgppeers policies}"
+RESOURCES="${TESTS:-hostendpoints profiles workloadendpoints ippools bgppeers policies nodes}"
 for i in $RESOURCES; do
   tffile="${WD}/testing/test_${i}.tf"
   if [[ -e $tffile ]]; then

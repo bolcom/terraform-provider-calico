@@ -2,7 +2,7 @@
 
 ## About
 - For use with Calico 2.x with the etcd backend
-- Only IPPools, Hostendpoints, Profiles and Policies supported, more coming soon
+- BGPPeers, IPPools, Hostendpoints, Profiles and Policies supported, more coming soon
 
 ## Install
 Due to the large amount of dependencies from libcalico-go and it's usage of glide for dep management, the install is a bit more than just a go get.
@@ -154,7 +154,17 @@ resource "calico_ippool" "myippool" {
   }
 }
 ```
-
+### BGP Peers
+```
+resource "calico_bgppeer" "mybgppeer" {
+  scope = "node"
+  node = "rack1-host1"
+  peerIP = "192.168.1.1"
+  spec {
+    asNumber = "63400"
+  }
+}
+```
 ## Testing
 The script test.sh will:
 - download calicoctl and terraform

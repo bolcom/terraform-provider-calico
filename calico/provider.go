@@ -68,6 +68,42 @@ func Provider() terraform.ResourceProvider {
 				Default:     "",
 				Description: "File location cacert",
 			},
+			"backend_k8s_configfile": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "K8sKubeconfigFile`",
+			},
+			"backend_k8s_server": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "K8sServer",
+			},
+			"backend_k8s_clientcert": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "K8sClientCertificate",
+			},
+			"backend_k8s_clientkey": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "K8sClientKey",
+			},
+			"backend_k8s_ca": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "K8sCertificateAuthority",
+			},
+			"backend_k8s_token": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "K8sToken",
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -76,6 +112,7 @@ func Provider() terraform.ResourceProvider {
 			"calico_policy":       resourceCalicoPolicy(),
 			"calico_ippool":       resourceCalicoIpPool(),
 			"calico_bgppeer":      resourceCalicoBgpPeer(),
+			"calico_node":         resourceCalicoNode(),
 		},
 
 		ConfigureFunc: providerConfigure,
@@ -88,7 +125,8 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	backendType := d.Get("backend_type").(string)
 
-	if backendType == "etcdv2" {
+	switch backendType {
+	case "etcdv2":
 		calicoConfig.Spec.DatastoreType = api.DatastoreType(backendType)
 
 		calicoConfig.Spec.EtcdScheme = d.Get("backend_etcd_scheme").(string)
@@ -99,7 +137,16 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		calicoConfig.Spec.EtcdKeyFile = d.Get("backend_etcd_keyfile").(string)
 		calicoConfig.Spec.EtcdCertFile = d.Get("backend_etcd_certfile").(string)
 		calicoConfig.Spec.EtcdCACertFile = d.Get("backend_etcd_cacertfile").(string)
-	} else {
+	case "kubernetes":
+		calicoConfig.Spec.DatastoreType = api.DatastoreType(backendType)
+
+		calicoConfig.Spec.K8sKubeconfigFile = d.Get("backend_k8s_configfile").(string)
+		calicoConfig.Spec.K8sServer = d.Get("backend_k8s_server").(string)
+		calicoConfig.Spec.K8sClientCertificate = d.Get("backend_k8s_clientcert").(string)
+		calicoConfig.Spec.K8sClientKey = d.Get("backend_k8s_clientkey").(string)
+		calicoConfig.Spec.K8sCertificateAuthority = d.Get("backend_k8s_ca").(string)
+		calicoConfig.Spec.K8sToken = d.Get("backend_k8s_token").(string)
+	default:
 		return nil, fmt.Errorf("backend_type etcdv2 is the only supported backend at the moment")
 	}
 

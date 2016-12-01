@@ -1,7 +1,10 @@
 # Calico Terraform Provider
 
 ## About
-- For use with Calico 2.x with the etcd backend
+Terraform provider for use with Calico 2.x.
+
+## Known Issues
+Kubernetes as a storage backend for Calico support is there, but untested. Feedback wanted!
 
 ## Install
 Due to the large amount of dependencies from libcalico-go and it's usage of glide for dep management, the install is a bit more than just a go get.
@@ -31,6 +34,12 @@ Optional:
 - backend_etcd_keyfile: File location keyfile
 - backend_etcd_certfile: File location certfile
 - backend_etcd_cacertfile: File location cacert
+- backend_k8s_configfile: K8sKubeconfigFile
+- backend_k8s_server: K8sServer
+- backend_k8s_clientcert: K8sClientCertificate
+- backend_k8s_clientkey: K8sClientKey
+- backend_k8s_ca: K8sCertificateAuthority
+- backend_k8s_token: K8sToken
 
 ### Host Endpoint
 ```

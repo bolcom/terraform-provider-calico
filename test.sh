@@ -123,10 +123,10 @@ for i in $RESOURCES; do
     cd test
 
     if [[ "$DEBUG" == "true" ]]; then
-      TF_LOG=DEBUG ./terraform apply
-    else
-      RES="$(./terraform apply 2>&1 >/dev/null)"
+      export TF_LOG=DEBUG
     fi
+
+    RES="$(./terraform apply)"
     if [[ $? -ne 0 ]]; then
       echo "${i} - FAILED"
       echo "$RES"
@@ -135,16 +135,13 @@ for i in $RESOURCES; do
     fi
     rm "test_${i}.tf"
 
-    if [[ "$DEBUG" == "true" ]]; then
-      ETCD_AUTHORITY="$ETCD_AUTHORITY" ./calicoctl get $i -o yaml 1> test.yaml
-    else
-      ETCD_AUTHORITY="$ETCD_AUTHORITY" ./calicoctl get $i -o yaml 1> test.yaml 2>/dev/null
-    fi
+    ETCD_AUTHORITY="$ETCD_AUTHORITY" ./calicoctl get $i -o yaml 1> test.yaml 2>calicoctl_debug.txt
     if [[ $? -ne 0 ]]; then
       echo "${i} - FAILED"
       echo "Failed to talk to Etcd at ${ETCD_AUTHORITY}"
       exit 1
     fi
+
     RES="$(diff test.yaml ${WD}/testing/test_${i}.yaml)"
     if [[ $? -ne 0 ]]; then
       echo "${i} - FAILED"
@@ -157,6 +154,9 @@ for i in $RESOURCES; do
       echo "${i} - OK"
       if [[ "$DEBUG" == "true" ]]; then
         cat test.yaml
+        echo "Full output from Calicoctl:"
+        cat calicoctl_debug.txt
+        rm calicoctl_debug.txt
       fi
       cd ..
     fi

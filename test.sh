@@ -118,6 +118,7 @@ echo "Testing:"
 RESOURCES="${TESTS:-nodes hostendpoints profiles workloadendpoints ippools bgppeers policies}"
 for i in $RESOURCES; do
   tffile="${WD}/testing/test_${i}.tf"
+  rm -f test/test_*.tf
   if [[ -e $tffile ]]; then
     cp "$tffile" test/
     cd test
@@ -133,7 +134,6 @@ for i in $RESOURCES; do
       echo "Failed to terraform apply (${tffile})"
       exit 1
     fi
-    rm "test_${i}.tf"
 
     ETCD_AUTHORITY="$ETCD_AUTHORITY" ./calicoctl get $i -o yaml 1> test.yaml 2>calicoctl_debug.txt
     if [[ $? -ne 0 ]]; then
@@ -144,22 +144,42 @@ for i in $RESOURCES; do
 
     RES="$(diff test.yaml ${WD}/testing/test_${i}.yaml)"
     if [[ $? -ne 0 ]]; then
-      echo "${i} - FAILED"
+      echo "${i} - Create: FAILED"
       echo "${RES}"
       echo "Expected ${i} yaml and that from testing/test_${i}.yaml do not match"
       echo "Full output from Etcd:"
       cat test.yaml
       exit 1
     else
-      echo "${i} - OK"
+      echo "${i} - Create: OK"
       if [[ "$DEBUG" == "true" ]]; then
         cat test.yaml
         echo "Full output from Calicoctl:"
         cat calicoctl_debug.txt
-        rm calicoctl_debug.txt
       fi
-      cd ..
     fi
+
+    RES="$(./terraform destroy -force)"
+    if [[ $? -ne 0 ]]; then
+      echo "${i} - Destroy: FAILED"
+      echo "$RES"
+      echo "Failed to terraform destroy (${tffile})"
+      exit 1
+    fi
+    rm "test_${i}.tf"
+
+    RES="$(ETCD_AUTHORITY="$ETCD_AUTHORITY" ./calicoctl get $i -o yaml 2>calicoctl_debug.txt)"
+    if [[ $? -ne 0 ]] || [[ $RES != '[]' ]]; then
+      echo "${i} - Destroy: FAILED"
+      echo "Failed to terraform destroy (${tffile})"
+      echo "Full output from Calicoctl:"
+      cat calicoctl_debug.txt
+      rm -f calicoctl_debug.txt
+      exit 1
+    else
+      echo "${i} - Destroy: OK"
+    fi
+    cd ..
   else
     echo "${i} - Not implemented"
   fi
